@@ -1,0 +1,1342 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Yahya's Dashboard — Live Demo</title>
+<meta name="description" content="A self-contained, framework-free personal dashboard (tasks, calendar, job tracker, gym logger, university, notes) — single HTML file, no build step. Live interactive demo.">
+<style id="appstyle">
+:root{
+  --bg:#f5f5f3; --surface:#ffffff; --surface-2:#f0f0ed; --border:#e2e2de;
+  --text:#1b1b19; --text-dim:#6b6b65; --text-faint:#95948d;
+  --accent:#2f5fe0; --accent-ink:#ffffff;
+  --success:#1a8a4a; --success-bg:#e6f6ec;
+  --warning:#b3720a; --warning-bg:#fdf1de;
+  --danger:#c22a2a; --danger-bg:#fbe9e9;
+  --neutral-bg:#eceef2; --neutral-ink:#3a4256;
+  --radius:14px; --radius-sm:8px;
+  --shadow:0 1px 2px rgba(20,20,15,0.04), 0 1px 8px rgba(20,20,15,0.03);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#17181a; --surface:#202225; --surface-2:#26282b; --border:#34363a;
+    --text:#eceeee; --text-dim:#a8aaae; --text-faint:#75777b;
+    --accent:#6d93ff; --accent-ink:#0d1730;
+    --success:#4fce8b; --success-bg:#123322;
+    --warning:#e3a94a; --warning-bg:#3a2a0e;
+    --danger:#f0797a; --danger-bg:#3a1616;
+    --neutral-bg:#2b2e33; --neutral-ink:#c7cad0;
+    --shadow:0 1px 2px rgba(0,0,0,0.3), 0 1px 10px rgba(0,0,0,0.25);
+  }
+  :root:not([data-theme="light"]) .badge.applied{background:#1b2a4a; color:#9db8ff;}
+}
+:root[data-theme="dark"] .badge.applied{background:#1b2a4a; color:#9db8ff;}
+:root[data-theme="dark"]{
+  --bg:#17181a; --surface:#202225; --surface-2:#26282b; --border:#34363a;
+  --text:#eceeee; --text-dim:#a8aaae; --text-faint:#75777b;
+  --accent:#6d93ff; --accent-ink:#0d1730;
+  --success:#4fce8b; --success-bg:#123322;
+  --warning:#e3a94a; --warning-bg:#3a2a0e;
+  --danger:#f0797a; --danger-bg:#3a1616;
+  --neutral-bg:#2b2e33; --neutral-ink:#c7cad0;
+  --shadow:0 1px 2px rgba(0,0,0,0.3), 0 1px 10px rgba(0,0,0,0.25);
+}
+*{box-sizing:border-box;}
+body{background:var(--bg); color:var(--text); font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
+#root{max-width:1180px; margin:0 auto; padding:20px 16px 60px;}
+a{color:var(--accent);}
+h1,h2,h3{font-weight:650; margin:0;}
+.header{display:flex; flex-wrap:wrap; align-items:flex-end; justify-content:space-between; gap:14px; margin-bottom:18px;}
+.header .greet h1{font-size:22px; letter-spacing:-0.01em;}
+.header .greet .sub{color:var(--text-dim); font-size:13px; margin-top:2px;}
+.savebar{font-size:12px; color:var(--text-faint); display:flex; align-items:center; gap:6px;}
+.demobar{display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:10px; background:var(--neutral-bg); color:var(--neutral-ink); border:1px solid var(--border); border-radius:var(--radius-sm); padding:9px 14px; font-size:13px; margin-bottom:14px;}
+.demoreset{flex:none; background:var(--surface); color:var(--text); border:1px solid var(--border); border-radius:var(--radius-sm); padding:5px 10px; font-size:12px; font-weight:600; cursor:pointer;}
+.demoreset:hover{border-color:var(--accent); color:var(--accent);}
+.dot{width:7px; height:7px; border-radius:50%; background:var(--text-faint); flex:none;}
+.dot.ok{background:var(--success);}
+.dot.busy{background:var(--warning);}
+.dot.err{background:var(--danger);}
+.stats{display:flex; flex-wrap:wrap; gap:10px; margin-bottom:20px;}
+.stat{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-sm); padding:10px 14px; min-width:118px; box-shadow:var(--shadow);}
+.stat .n{font-size:20px; font-weight:700;}
+.stat .l{font-size:11.5px; color:var(--text-dim); margin-top:1px;}
+.grid{display:grid; grid-template-columns:repeat(auto-fit, minmax(300px,1fr)); gap:16px;}
+.card{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:16px 16px 18px; box-shadow:var(--shadow); min-width:0;}
+.card.wide{grid-column:1 / -1;}
+.tabbar{display:flex; gap:6px; overflow-x:auto; padding-bottom:6px; margin-bottom:18px; -webkit-overflow-scrolling:touch; scrollbar-width:thin;}
+.navtab{display:flex; align-items:center; gap:6px; flex:none; font:inherit; font-size:13px; padding:8px 14px; border-radius:999px; border:1px solid var(--border); background:var(--surface); color:var(--text-dim); cursor:pointer; white-space:nowrap;}
+.navtab .ic{font-size:15px;}
+.navtab.active{background:var(--accent); color:var(--accent-ink); border-color:var(--accent);}
+.navtab:hover:not(.active){background:var(--surface-2);}
+.page .card{width:100%;}
+.tile{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:14px 15px; box-shadow:var(--shadow); cursor:pointer; text-align:left; font:inherit; color:var(--text); display:flex; flex-direction:column; gap:6px;}
+.tile:hover{border-color:var(--accent);}
+.tile h3{font-size:13.5px; display:flex; align-items:center; gap:7px; margin:0;}
+.tile .preview{font-size:12.5px; color:var(--text-dim); line-height:1.5;}
+.tile .more{font-size:11.5px; color:var(--accent); margin-top:2px;}
+.stat{cursor:pointer;}
+.stat:hover{border-color:var(--accent);}
+.subtabbar{display:flex; gap:6px; overflow-x:auto; padding-bottom:4px; margin-bottom:16px;}
+.subtab{flex:none; font:inherit; font-size:12.5px; padding:6px 12px; border-radius:8px; border:1px solid transparent; background:var(--surface-2); color:var(--text-dim); cursor:pointer; white-space:nowrap;}
+.subtab.active{background:var(--accent); color:var(--accent-ink);}
+.subtab:hover:not(.active){border-color:var(--border);}
+.gym-row{background:var(--surface-2); border-radius:var(--radius-sm); padding:10px 11px; margin-bottom:8px;}
+.gym-row label{font-size:10.5px; color:var(--text-faint); display:flex; flex-direction:column; gap:3px;}
+.gym-row input{width:100%;}
+.gymhero{text-align:center; padding:20px 16px;}
+.gymhero .eyebrow{text-transform:uppercase; letter-spacing:.14em; font-size:11px; color:var(--accent); font-weight:700;}
+.gymhero h2{font-size:24px; margin:8px 0 6px;}
+.gymhero p{max-width:440px; margin:0 auto 14px; color:var(--text-dim); font-size:13px;}
+.setgrid{display:grid; grid-template-columns:28px 1fr 1fr; gap:10px; align-items:end; margin-bottom:8px;}
+.setgrid .idx{font-weight:700; color:var(--accent); padding-bottom:8px;}
+.setgrid label{font-size:10.5px; color:var(--text-faint); display:flex; flex-direction:column; gap:3px;}
+.resttimer{display:inline-flex; align-items:center; gap:8px; font-size:12px; background:var(--surface-2); padding:4px 10px; border-radius:999px;}
+.pr-pill{color:var(--accent); font-weight:700; font-size:12.5px; margin-top:6px;}
+.iframe-wrap{width:100%; border-radius:var(--radius); overflow:hidden; border:1px solid var(--border); box-shadow:var(--shadow); background:var(--surface-2);}
+.iframe-wrap iframe{width:100%; height:800px; border:0; display:block;}
+.card h2{font-size:14.5px; display:flex; align-items:center; gap:8px; margin-bottom:12px;}
+.card h2 .ic{font-size:16px;}
+.muted{color:var(--text-dim); font-size:12.5px;}
+.faint{color:var(--text-faint); font-size:11.5px;}
+ul.plain{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:7px;}
+.row{display:flex; align-items:flex-start; gap:9px;}
+.row .grow{flex:1; min-width:0;}
+.taskline{display:flex; align-items:flex-start; gap:9px; padding:7px 8px; border-radius:var(--radius-sm); background:var(--surface-2);}
+.taskline.done .txt{text-decoration:line-through; color:var(--text-faint);}
+.taskline input[type=checkbox]{margin-top:2px; width:15px; height:15px; accent-color:var(--accent); flex:none;}
+.txt{font-size:13.5px; word-break:break-word;}
+.tag{font-size:10.5px; padding:2px 7px; border-radius:99px; background:var(--neutral-bg); color:var(--neutral-ink); white-space:nowrap;}
+.due{font-size:11px; color:var(--text-faint); white-space:nowrap;}
+.iconbtn{border:none; background:transparent; color:var(--text-faint); cursor:pointer; font-size:14px; line-height:1; padding:4px; border-radius:6px; flex:none;}
+.iconbtn:hover{color:var(--danger); background:var(--danger-bg);}
+form.addrow{display:flex; gap:6px; margin-top:10px; flex-wrap:wrap;}
+input[type=text], input[type=date], input[type=url], textarea, select{
+  font:inherit; font-size:13px; padding:7px 9px; border-radius:8px; border:1px solid var(--border);
+  background:var(--surface); color:var(--text); outline:none;
+}
+input[type=text]:focus, input[type=date]:focus, input[type=url]:focus, textarea:focus, select:focus{border-color:var(--accent);}
+form.addrow input[type=text]{flex:1; min-width:110px;}
+select.catsel{max-width:100px;}
+button.btn{font:inherit; font-size:13px; padding:7px 13px; border-radius:8px; border:1px solid var(--accent); background:var(--accent); color:var(--accent-ink); cursor:pointer; white-space:nowrap;}
+button.btn:hover{filter:brightness(1.06);}
+button.btn.ghost{background:transparent; color:var(--accent);}
+table{width:100%; border-collapse:collapse; font-size:12.8px;}
+th{text-align:left; font-size:11px; text-transform:uppercase; letter-spacing:.03em; color:var(--text-faint); font-weight:600; padding:0 8px 6px; border-bottom:1px solid var(--border);}
+td{padding:8px 8px; border-bottom:1px solid var(--border); vertical-align:top;}
+tr:last-child td{border-bottom:none;}
+.tablewrap{overflow-x:auto;}
+.badge{display:inline-block; font-size:11px; padding:2px 8px; border-radius:99px; font-weight:600;}
+.badge.lead{background:var(--neutral-bg); color:var(--neutral-ink);}
+.badge.applied{background:#e6effe; color:#2f5fe0;}
+.badge.interview{background:var(--warning-bg); color:var(--warning);}
+.badge.offer{background:var(--success-bg); color:var(--success);}
+.badge.rejected{background:var(--danger-bg); color:var(--danger);}
+.jobstatus{font-size:11.5px; padding:3px 5px; border-radius:6px;}
+.emailrow{display:flex; gap:10px; padding:7px 0; border-bottom:1px solid var(--border);}
+.emailrow:last-child{border-bottom:none;}
+.emailrow .who{font-weight:600; font-size:12.5px; min-width:120px;}
+.emailrow .what{font-size:12.5px; color:var(--text-dim); flex:1; min-width:0;}
+.emailrow .when{font-size:11px; color:var(--text-faint); white-space:nowrap;}
+.notesbox{width:100%; min-height:120px; resize:vertical; font-size:13px; line-height:1.5;}
+.filecats{display:flex; flex-direction:column; gap:10px;}
+.filecat .lbl{font-size:11px; text-transform:uppercase; letter-spacing:.03em; color:var(--text-faint); margin-bottom:5px; font-weight:600;}
+.filechip{display:inline-flex; align-items:center; gap:5px; font-size:12px; background:var(--surface-2); padding:4px 9px; border-radius:99px; margin:0 5px 5px 0;}
+.gymday{border:1px solid var(--border); border-radius:var(--radius-sm); padding:9px 10px; margin-bottom:8px;}
+.gymday .d{font-weight:650; font-size:13px; margin-bottom:4px;}
+.gymday .ex{font-size:12.5px; color:var(--text-dim); padding:1px 0;}
+.empty{color:var(--text-faint); font-size:12.5px; font-style:italic; padding:6px 2px;}
+.footer-note{margin-top:22px; text-align:center; color:var(--text-faint); font-size:11.5px;}
+@media (max-width:640px){
+  .header{flex-direction:column; align-items:flex-start;}
+  .emailrow{flex-wrap:wrap;}
+  .emailrow .who{min-width:0;}
+}
+</style>
+</head>
+<body>
+<script type="application/json" id="state-data">
+{
+  "tasks": [
+    {"id":"t1","text":"Finish semester enrollment paperwork","category":"uni","done":false,"due":"2026-10-01"},
+    {"id":"t2","text":"Apply to at least 3 AI roles this week","category":"job","done":false,"due":""},
+    {"id":"t3","text":"Set up my gym split for the new semester","category":"gym","done":true,"due":""},
+    {"id":"t4","text":"Update CV with latest projects","category":"job","done":false,"due":""},
+    {"id":"t5","text":"Read two chapters for Monday's seminar","category":"uni","done":false,"due":"2026-09-14"}
+  ],
+  "calendar": [
+    {"id":"c1","date":"2026-10-01","title":"Semester officially starts","notes":""},
+    {"id":"c2","date":"2026-10-12","title":"First lecture day","notes":"Confirm your personal timetable once published"},
+    {"id":"c3","date":"2026-09-18","title":"Coffee chat with a recruiter","notes":"Prep two questions beforehand"},
+    {"id":"c4","date":"2027-02-05","title":"Last lecture day of term","notes":""}
+  ],
+  "jobs": [
+    {"id":"j1","company":"Acme Robotics","role":"Working Student, Applied AI","location":"Berlin","status":"interview","link":"","notes":"Second round next week"},
+    {"id":"j2","company":"Northwind Analytics","role":"ML Engineering Intern","location":"Remote","status":"applied","link":"","notes":""},
+    {"id":"j3","company":"Globex Systems","role":"Werkstudent, Machine Learning","location":"Munich","status":"lead","link":"","notes":"Found via company careers page"},
+    {"id":"j4","company":"Initech Labs","role":"AI Research Assistant (part-time)","location":"Remote","status":"lead","link":"","notes":"Aggregator, recheck weekly"},
+    {"id":"j5","company":"Umbrella Data","role":"Data Science Working Student","location":"Munich","status":"rejected","link":"","notes":"Good feedback, reapply next cycle"}
+  ],
+  "gym": {
+    "templates": [
+      {"id":"tpl1","name":"Push Day","createdAt":"2026-08-20T08:00:00Z","exercises":[
+        {"exerciseId":"bench-press","sets":4,"reps":8,"restSeconds":120},
+        {"exerciseId":"overhead-press","sets":3,"reps":10,"restSeconds":90},
+        {"exerciseId":"triceps-pushdown","sets":3,"reps":12,"restSeconds":60}
+      ]}
+    ],
+    "workouts": [
+      {"id":"w1","templateId":"tpl1","templateName":"Push Day","date":"2026-08-25T17:30:00Z","exercises":[
+        {"exerciseId":"bench-press","sets":[{"reps":8,"weight":70},{"reps":8,"weight":70},{"reps":7,"weight":72.5},{"reps":6,"weight":72.5}]},
+        {"exerciseId":"overhead-press","sets":[{"reps":10,"weight":40},{"reps":10,"weight":40},{"reps":9,"weight":40}]},
+        {"exerciseId":"triceps-pushdown","sets":[{"reps":12,"weight":25},{"reps":12,"weight":25},{"reps":10,"weight":27.5}]}
+      ]}
+    ],
+    "cardio": [
+      {"id":"cd1","name":"Treadmill intervals","minutes":25,"date":"2026-08-27T07:00:00Z"}
+    ]
+  },
+  "university": {
+    "school": "State University",
+    "program": "Computer Science, minor in Business Administration",
+    "starts": "October 2026",
+    "notes": ""
+  },
+  "notes": "This is a demo of my personal dashboard — built as a single self-contained HTML/CSS/JS file, no framework, no build step. Everything you click actually works: check off a task, drag through the gym logger, add a job lead. Feel free to poke around.",
+  "files": [
+    {"name":"resume.pdf","category":"Job applications"},
+    {"name":"cover_letter_template.pdf","category":"Job applications"},
+    {"name":"portfolio_summary.pdf","category":"Job applications"},
+    {"name":"transcript.pdf","category":"University"},
+    {"name":"enrollment_confirmation.pdf","category":"University"},
+    {"name":"language_certificate.pdf","category":"University"}
+  ],
+  "emails": {
+    "fetchedAt": "2026-08-30T12:14:00Z",
+    "unreadCount": 4,
+    "items": [
+      {"sender":"Acme Robotics — Recruiting","subject":"Re: Working Student, Applied AI — next steps","date":"Aug 29"},
+      {"sender":"University Registrar","subject":"Your enrollment confirmation","date":"Aug 28"},
+      {"sender":"Northwind Analytics","subject":"Thanks for applying","date":"Aug 27"},
+      {"sender":"Newsletter","subject":"5 things to know this week","date":"Aug 26"}
+    ]
+  }
+}
+</script>
+<div id="root"></div>
+<script id="appscript">
+(function(){
+"use strict";
+var SCRIPT_TEXT = document.currentScript.textContent;
+var STYLE_TEXT = document.getElementById('appstyle').textContent;
+var PAGE_TITLE = "Yahya's Dashboard";
+var root = document.getElementById('root');
+var stateEl = document.getElementById('state-data');
+
+// This is a public portfolio demo: outside Claude, window.claude doesn't exist,
+// so edits fall back to this browser's localStorage instead of Claude's artifact
+// capability. Nothing here ever leaves your own browser.
+var STANDALONE = !(window.claude && window.claude.use);
+var STORAGE_KEY = 'life-dashboard-demo-state-v1';
+
+var state;
+try { state = JSON.parse(stateEl.textContent); } catch(e){ state = {tasks:[],calendar:[],jobs:[],gym:{note:"",plan:[],log:[]},university:{},notes:"",files:[],emails:{items:[]}}; }
+if(STANDALONE){
+  try{
+    var saved = localStorage.getItem(STORAGE_KEY);
+    if(saved) state = JSON.parse(saved);
+  }catch(e){}
+}
+state.tasks = state.tasks || [];
+state.calendar = state.calendar || [];
+state.jobs = state.jobs || [];
+state.gym = state.gym || {templates:[],workouts:[],cardio:[]};
+state.gym.templates = state.gym.templates || [];
+state.gym.workouts = state.gym.workouts || [];
+state.gym.cardio = state.gym.cardio || [];
+state.university = state.university || {};
+state.notes = state.notes || "";
+state.files = state.files || [];
+state.emails = state.emails || {items:[]};
+
+var artifactApi = null;
+var apiState = "connecting"; // connecting | ok | busy | unavailable | error
+var activeTab = "overview"; // per-viewer only, never persisted
+
+function uid(){ return Math.random().toString(36).slice(2,9) + Date.now().toString(36).slice(-4); }
+function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]; }); }
+function fmtDate(d){
+  if(!d) return "";
+  var dt = new Date(d+"T00:00:00");
+  if(isNaN(dt.getTime())) return d;
+  return dt.toLocaleDateString(undefined,{weekday:'short', month:'short', day:'numeric'});
+}
+function daysUntil(d){
+  if(!d) return null;
+  var dt = new Date(d+"T00:00:00");
+  if(isNaN(dt.getTime())) return null;
+  var today = new Date(); today.setHours(0,0,0,0);
+  return Math.round((dt-today)/86400000);
+}
+
+/* ---------- gym: exercise library (static, ~160 movements) ---------- */
+var EXERCISES = [
+  {id:'bench-press',name:'Barbell Bench Press',group:'Chest',equipment:'Barbell',defaultRest:120},
+  {id:'incline-bench',name:'Incline Bench Press',group:'Chest',equipment:'Barbell',defaultRest:120},
+  {id:'db-bench',name:'Dumbbell Bench Press',group:'Chest',equipment:'Dumbbell',defaultRest:90},
+  {id:'chest-fly',name:'Chest Fly',group:'Chest',equipment:'Machine',defaultRest:60},
+  {id:'cable-crossover',name:'Cable Crossover',group:'Chest',equipment:'Cable',defaultRest:60},
+  {id:'push-up',name:'Push-Up',group:'Chest',equipment:'Bodyweight',defaultRest:60},
+  {id:'dip',name:'Chest Dip',group:'Chest',equipment:'Bodyweight',defaultRest:90},
+  {id:'deadlift',name:'Deadlift',group:'Back',equipment:'Barbell',defaultRest:180},
+  {id:'pull-up',name:'Pull-Up',group:'Back',equipment:'Bodyweight',defaultRest:90},
+  {id:'lat-pulldown',name:'Lat Pulldown',group:'Back',equipment:'Cable',defaultRest:90},
+  {id:'barbell-row',name:'Barbell Row',group:'Back',equipment:'Barbell',defaultRest:120},
+  {id:'seated-row',name:'Seated Cable Row',group:'Back',equipment:'Cable',defaultRest:90},
+  {id:'db-row',name:'One-Arm Dumbbell Row',group:'Back',equipment:'Dumbbell',defaultRest:90},
+  {id:'face-pull',name:'Face Pull',group:'Back',equipment:'Cable',defaultRest:60},
+  {id:'shrug',name:'Barbell Shrug',group:'Back',equipment:'Barbell',defaultRest:60},
+  {id:'squat',name:'Barbell Back Squat',group:'Legs',equipment:'Barbell',defaultRest:180},
+  {id:'front-squat',name:'Front Squat',group:'Legs',equipment:'Barbell',defaultRest:150},
+  {id:'leg-press',name:'Leg Press',group:'Legs',equipment:'Machine',defaultRest:120},
+  {id:'romanian-deadlift',name:'Romanian Deadlift',group:'Legs',equipment:'Barbell',defaultRest:120},
+  {id:'lunge',name:'Walking Lunge',group:'Legs',equipment:'Dumbbell',defaultRest:90},
+  {id:'leg-extension',name:'Leg Extension',group:'Legs',equipment:'Machine',defaultRest:60},
+  {id:'leg-curl',name:'Leg Curl',group:'Legs',equipment:'Machine',defaultRest:60},
+  {id:'hip-thrust',name:'Hip Thrust',group:'Legs',equipment:'Barbell',defaultRest:120},
+  {id:'calf-raise',name:'Standing Calf Raise',group:'Legs',equipment:'Machine',defaultRest:45},
+  {id:'bulgarian-split-squat',name:'Bulgarian Split Squat',group:'Legs',equipment:'Dumbbell',defaultRest:90},
+  {id:'overhead-press',name:'Overhead Press',group:'Shoulders',equipment:'Barbell',defaultRest:120},
+  {id:'db-shoulder-press',name:'Dumbbell Shoulder Press',group:'Shoulders',equipment:'Dumbbell',defaultRest:90},
+  {id:'lateral-raise',name:'Lateral Raise',group:'Shoulders',equipment:'Dumbbell',defaultRest:60},
+  {id:'front-raise',name:'Front Raise',group:'Shoulders',equipment:'Dumbbell',defaultRest:60},
+  {id:'rear-delt-fly',name:'Rear Delt Fly',group:'Shoulders',equipment:'Dumbbell',defaultRest:60},
+  {id:'arnold-press',name:'Arnold Press',group:'Shoulders',equipment:'Dumbbell',defaultRest:90},
+  {id:'barbell-curl',name:'Barbell Curl',group:'Arms',equipment:'Barbell',defaultRest:60},
+  {id:'db-curl',name:'Dumbbell Curl',group:'Arms',equipment:'Dumbbell',defaultRest:60},
+  {id:'hammer-curl',name:'Hammer Curl',group:'Arms',equipment:'Dumbbell',defaultRest:60},
+  {id:'preacher-curl',name:'Preacher Curl',group:'Arms',equipment:'Barbell',defaultRest:60},
+  {id:'triceps-pushdown',name:'Triceps Pushdown',group:'Arms',equipment:'Cable',defaultRest:60},
+  {id:'skull-crusher',name:'Skull Crusher',group:'Arms',equipment:'Barbell',defaultRest:75},
+  {id:'overhead-extension',name:'Overhead Triceps Extension',group:'Arms',equipment:'Dumbbell',defaultRest:60},
+  {id:'close-grip-bench',name:'Close-Grip Bench Press',group:'Arms',equipment:'Barbell',defaultRest:90},
+  {id:'plank',name:'Plank',group:'Core',equipment:'Bodyweight',defaultRest:45},
+  {id:'crunch',name:'Crunch',group:'Core',equipment:'Bodyweight',defaultRest:45},
+  {id:'hanging-leg-raise',name:'Hanging Leg Raise',group:'Core',equipment:'Bodyweight',defaultRest:60},
+  {id:'russian-twist',name:'Russian Twist',group:'Core',equipment:'Bodyweight',defaultRest:45},
+  {id:'cable-crunch',name:'Cable Crunch',group:'Core',equipment:'Cable',defaultRest:60},
+  {id:'ab-wheel',name:'Ab Wheel Rollout',group:'Core',equipment:'Other',defaultRest:60},
+  {id:'clean-and-press',name:'Clean and Press',group:'Full Body',equipment:'Barbell',defaultRest:150},
+  {id:'kettlebell-swing',name:'Kettlebell Swing',group:'Full Body',equipment:'Kettlebell',defaultRest:75},
+  {id:'burpee',name:'Burpee',group:'Full Body',equipment:'Bodyweight',defaultRest:60},
+  {id:'farmers-walk',name:'Farmer\'s Walk',group:'Full Body',equipment:'Dumbbell',defaultRest:90},
+  {id:'decline-bench',name:'Decline Bench Press',group:'Chest',equipment:'Barbell',defaultRest:120},
+  {id:'incline-db-press',name:'Incline Dumbbell Press',group:'Chest',equipment:'Dumbbell',defaultRest:90},
+  {id:'db-fly',name:'Dumbbell Fly',group:'Chest',equipment:'Dumbbell',defaultRest:60},
+  {id:'pec-deck',name:'Pec Deck Machine',group:'Chest',equipment:'Machine',defaultRest:60},
+  {id:'machine-chest-press',name:'Machine Chest Press',group:'Chest',equipment:'Machine',defaultRest:90},
+  {id:'smith-bench',name:'Smith Machine Bench Press',group:'Chest',equipment:'Machine',defaultRest:90},
+  {id:'low-cable-fly',name:'Low-to-High Cable Fly',group:'Chest',equipment:'Cable',defaultRest:60},
+  {id:'svend-press',name:'Svend Press',group:'Chest',equipment:'Other',defaultRest:45},
+  {id:'diamond-push-up',name:'Diamond Push-Up',group:'Chest',equipment:'Bodyweight',defaultRest:60},
+  {id:'incline-push-up',name:'Incline Push-Up',group:'Chest',equipment:'Bodyweight',defaultRest:45},
+  {id:'decline-push-up',name:'Decline Push-Up',group:'Chest',equipment:'Bodyweight',defaultRest:60},
+  {id:'dumbbell-pullover',name:'Dumbbell Pullover',group:'Chest',equipment:'Dumbbell',defaultRest:75},
+  {id:'sumo-deadlift',name:'Sumo Deadlift',group:'Back',equipment:'Barbell',defaultRest:180},
+  {id:'trap-bar-deadlift',name:'Trap Bar Deadlift',group:'Back',equipment:'Barbell',defaultRest:180},
+  {id:'rack-pull',name:'Rack Pull',group:'Back',equipment:'Barbell',defaultRest:150},
+  {id:'pendlay-row',name:'Pendlay Row',group:'Back',equipment:'Barbell',defaultRest:120},
+  {id:'t-bar-row',name:'T-Bar Row',group:'Back',equipment:'Barbell',defaultRest:120},
+  {id:'chest-supported-row',name:'Chest-Supported Row',group:'Back',equipment:'Machine',defaultRest:90},
+  {id:'machine-row',name:'Machine Row',group:'Back',equipment:'Machine',defaultRest:90},
+  {id:'chin-up',name:'Chin-Up',group:'Back',equipment:'Bodyweight',defaultRest:90},
+  {id:'neutral-grip-pulldown',name:'Neutral-Grip Lat Pulldown',group:'Back',equipment:'Cable',defaultRest:90},
+  {id:'wide-grip-pulldown',name:'Wide-Grip Lat Pulldown',group:'Back',equipment:'Cable',defaultRest:90},
+  {id:'straight-arm-pulldown',name:'Straight-Arm Pulldown',group:'Back',equipment:'Cable',defaultRest:60},
+  {id:'single-arm-pulldown',name:'Single-Arm Lat Pulldown',group:'Back',equipment:'Cable',defaultRest:60},
+  {id:'inverted-row',name:'Inverted Row',group:'Back',equipment:'Bodyweight',defaultRest:75},
+  {id:'meadows-row',name:'Meadows Row',group:'Back',equipment:'Barbell',defaultRest:90},
+  {id:'seal-row',name:'Seal Row',group:'Back',equipment:'Barbell',defaultRest:90},
+  {id:'dumbbell-shrug',name:'Dumbbell Shrug',group:'Back',equipment:'Dumbbell',defaultRest:60},
+  {id:'back-extension',name:'Back Extension',group:'Back',equipment:'Bodyweight',defaultRest:60},
+  {id:'good-morning',name:'Good Morning',group:'Back',equipment:'Barbell',defaultRest:90},
+  {id:'pull-over-machine',name:'Machine Pullover',group:'Back',equipment:'Machine',defaultRest:75},
+  {id:'hack-squat',name:'Hack Squat',group:'Legs',equipment:'Machine',defaultRest:120},
+  {id:'smith-squat',name:'Smith Machine Squat',group:'Legs',equipment:'Machine',defaultRest:120},
+  {id:'goblet-squat',name:'Goblet Squat',group:'Legs',equipment:'Kettlebell',defaultRest:90},
+  {id:'box-squat',name:'Box Squat',group:'Legs',equipment:'Barbell',defaultRest:150},
+  {id:'pause-squat',name:'Pause Squat',group:'Legs',equipment:'Barbell',defaultRest:150},
+  {id:'pendulum-squat',name:'Pendulum Squat',group:'Legs',equipment:'Machine',defaultRest:120},
+  {id:'belt-squat',name:'Belt Squat',group:'Legs',equipment:'Machine',defaultRest:120},
+  {id:'step-up',name:'Step-Up',group:'Legs',equipment:'Dumbbell',defaultRest:75},
+  {id:'reverse-lunge',name:'Reverse Lunge',group:'Legs',equipment:'Dumbbell',defaultRest:75},
+  {id:'curtsy-lunge',name:'Curtsy Lunge',group:'Legs',equipment:'Dumbbell',defaultRest:60},
+  {id:'sissy-squat',name:'Sissy Squat',group:'Legs',equipment:'Bodyweight',defaultRest:60},
+  {id:'seated-leg-curl',name:'Seated Leg Curl',group:'Legs',equipment:'Machine',defaultRest:60},
+  {id:'nordic-curl',name:'Nordic Hamstring Curl',group:'Legs',equipment:'Bodyweight',defaultRest:90},
+  {id:'stiff-leg-deadlift',name:'Stiff-Leg Deadlift',group:'Legs',equipment:'Barbell',defaultRest:120},
+  {id:'single-leg-rdl',name:'Single-Leg Romanian Deadlift',group:'Legs',equipment:'Dumbbell',defaultRest:90},
+  {id:'glute-bridge',name:'Glute Bridge',group:'Legs',equipment:'Bodyweight',defaultRest:60},
+  {id:'cable-kickback',name:'Cable Glute Kickback',group:'Legs',equipment:'Cable',defaultRest:45},
+  {id:'hip-abduction',name:'Hip Abduction Machine',group:'Legs',equipment:'Machine',defaultRest:45},
+  {id:'hip-adduction',name:'Hip Adduction Machine',group:'Legs',equipment:'Machine',defaultRest:45},
+  {id:'seated-calf-raise',name:'Seated Calf Raise',group:'Legs',equipment:'Machine',defaultRest:45},
+  {id:'leg-press-calf-raise',name:'Leg Press Calf Raise',group:'Legs',equipment:'Machine',defaultRest:45},
+  {id:'donkey-calf-raise',name:'Donkey Calf Raise',group:'Legs',equipment:'Machine',defaultRest:45},
+  {id:'sled-push',name:'Sled Push',group:'Legs',equipment:'Other',defaultRest:90},
+  {id:'seated-db-press',name:'Seated Dumbbell Press',group:'Shoulders',equipment:'Dumbbell',defaultRest:90},
+  {id:'machine-shoulder-press',name:'Machine Shoulder Press',group:'Shoulders',equipment:'Machine',defaultRest:90},
+  {id:'smith-ohp',name:'Smith Machine Overhead Press',group:'Shoulders',equipment:'Machine',defaultRest:90},
+  {id:'push-press',name:'Push Press',group:'Shoulders',equipment:'Barbell',defaultRest:120},
+  {id:'behind-neck-press',name:'Behind-the-Neck Press',group:'Shoulders',equipment:'Barbell',defaultRest:120},
+  {id:'cable-lateral-raise',name:'Cable Lateral Raise',group:'Shoulders',equipment:'Cable',defaultRest:45},
+  {id:'machine-lateral-raise',name:'Machine Lateral Raise',group:'Shoulders',equipment:'Machine',defaultRest:45},
+  {id:'reverse-pec-deck',name:'Reverse Pec Deck',group:'Shoulders',equipment:'Machine',defaultRest:60},
+  {id:'upright-row',name:'Upright Row',group:'Shoulders',equipment:'Barbell',defaultRest:60},
+  {id:'landmine-press',name:'Landmine Press',group:'Shoulders',equipment:'Barbell',defaultRest:90},
+  {id:'pike-push-up',name:'Pike Push-Up',group:'Shoulders',equipment:'Bodyweight',defaultRest:60},
+  {id:'cable-face-pull-rope',name:'Rope Rear Delt Row',group:'Shoulders',equipment:'Cable',defaultRest:60},
+  {id:'ez-bar-curl',name:'EZ-Bar Curl',group:'Arms',equipment:'Barbell',defaultRest:60},
+  {id:'incline-db-curl',name:'Incline Dumbbell Curl',group:'Arms',equipment:'Dumbbell',defaultRest:60},
+  {id:'concentration-curl',name:'Concentration Curl',group:'Arms',equipment:'Dumbbell',defaultRest:45},
+  {id:'cable-curl',name:'Cable Curl',group:'Arms',equipment:'Cable',defaultRest:60},
+  {id:'bayesian-curl',name:'Bayesian Cable Curl',group:'Arms',equipment:'Cable',defaultRest:60},
+  {id:'spider-curl',name:'Spider Curl',group:'Arms',equipment:'Dumbbell',defaultRest:45},
+  {id:'reverse-curl',name:'Reverse Curl',group:'Arms',equipment:'Barbell',defaultRest:60},
+  {id:'machine-curl',name:'Machine Biceps Curl',group:'Arms',equipment:'Machine',defaultRest:60},
+  {id:'rope-pushdown',name:'Rope Triceps Pushdown',group:'Arms',equipment:'Cable',defaultRest:60},
+  {id:'single-arm-pushdown',name:'Single-Arm Pushdown',group:'Arms',equipment:'Cable',defaultRest:45},
+  {id:'overhead-cable-extension',name:'Overhead Cable Extension',group:'Arms',equipment:'Cable',defaultRest:60},
+  {id:'triceps-kickback',name:'Triceps Kickback',group:'Arms',equipment:'Dumbbell',defaultRest:45},
+  {id:'jm-press',name:'JM Press',group:'Arms',equipment:'Barbell',defaultRest:90},
+  {id:'triceps-dip',name:'Triceps Bench Dip',group:'Arms',equipment:'Bodyweight',defaultRest:60},
+  {id:'wrist-curl',name:'Wrist Curl',group:'Arms',equipment:'Dumbbell',defaultRest:45},
+  {id:'reverse-wrist-curl',name:'Reverse Wrist Curl',group:'Arms',equipment:'Dumbbell',defaultRest:45},
+  {id:'side-plank',name:'Side Plank',group:'Core',equipment:'Bodyweight',defaultRest:45},
+  {id:'dead-bug',name:'Dead Bug',group:'Core',equipment:'Bodyweight',defaultRest:45},
+  {id:'bicycle-crunch',name:'Bicycle Crunch',group:'Core',equipment:'Bodyweight',defaultRest:45},
+  {id:'mountain-climber',name:'Mountain Climber',group:'Core',equipment:'Bodyweight',defaultRest:45},
+  {id:'leg-raise',name:'Lying Leg Raise',group:'Core',equipment:'Bodyweight',defaultRest:45},
+  {id:'toes-to-bar',name:'Toes to Bar',group:'Core',equipment:'Bodyweight',defaultRest:60},
+  {id:'v-up',name:'V-Up',group:'Core',equipment:'Bodyweight',defaultRest:45},
+  {id:'sit-up',name:'Sit-Up',group:'Core',equipment:'Bodyweight',defaultRest:45},
+  {id:'hollow-hold',name:'Hollow Body Hold',group:'Core',equipment:'Bodyweight',defaultRest:45},
+  {id:'pallof-press',name:'Pallof Press',group:'Core',equipment:'Cable',defaultRest:45},
+  {id:'cable-woodchop',name:'Cable Woodchop',group:'Core',equipment:'Cable',defaultRest:45},
+  {id:'machine-crunch',name:'Machine Crunch',group:'Core',equipment:'Machine',defaultRest:60},
+  {id:'captains-chair',name:'Captain\'s Chair Knee Raise',group:'Core',equipment:'Bodyweight',defaultRest:60},
+  {id:'dragon-flag',name:'Dragon Flag',group:'Core',equipment:'Bodyweight',defaultRest:90},
+  {id:'power-clean',name:'Power Clean',group:'Full Body',equipment:'Barbell',defaultRest:150},
+  {id:'hang-clean',name:'Hang Clean',group:'Full Body',equipment:'Barbell',defaultRest:150},
+  {id:'snatch',name:'Barbell Snatch',group:'Full Body',equipment:'Barbell',defaultRest:180},
+  {id:'thruster',name:'Thruster',group:'Full Body',equipment:'Barbell',defaultRest:120},
+  {id:'clean-and-jerk',name:'Clean and Jerk',group:'Full Body',equipment:'Barbell',defaultRest:180},
+  {id:'turkish-get-up',name:'Turkish Get-Up',group:'Full Body',equipment:'Kettlebell',defaultRest:90},
+  {id:'kb-clean-press',name:'Kettlebell Clean & Press',group:'Full Body',equipment:'Kettlebell',defaultRest:90},
+  {id:'wall-ball',name:'Wall Ball',group:'Full Body',equipment:'Other',defaultRest:60},
+  {id:'battle-ropes',name:'Battle Ropes',group:'Full Body',equipment:'Other',defaultRest:60},
+  {id:'box-jump',name:'Box Jump',group:'Full Body',equipment:'Bodyweight',defaultRest:75},
+  {id:'jump-squat',name:'Jump Squat',group:'Full Body',equipment:'Bodyweight',defaultRest:60},
+  {id:'medicine-ball-slam',name:'Medicine Ball Slam',group:'Full Body',equipment:'Other',defaultRest:60},
+  {id:'bear-crawl',name:'Bear Crawl',group:'Full Body',equipment:'Bodyweight',defaultRest:60},
+  {id:'muscle-up',name:'Muscle-Up',group:'Full Body',equipment:'Bodyweight',defaultRest:120},
+  {id:'sled-drag',name:'Sled Drag',group:'Full Body',equipment:'Other',defaultRest:90},
+  {id:'tire-flip',name:'Tire Flip',group:'Full Body',equipment:'Other',defaultRest:120}
+];
+var MUSCLE_GROUPS = ['Chest','Back','Legs','Shoulders','Arms','Core','Full Body'];
+function getExercise(id){ return EXERCISES.find(function(e){ return e.id===id; }); }
+function formatRest(seconds){
+  seconds = Number(seconds)||0;
+  if(seconds<60) return seconds+'s';
+  var m = Math.floor(seconds/60), s = seconds%60;
+  return s ? (m+'m '+s+'s') : (m+'m');
+}
+function formatCountdown(seconds){
+  seconds = Math.max(0, Math.ceil(seconds));
+  var m = Math.floor(seconds/60), s = seconds%60;
+  return m + ':' + (s<10?'0':'') + s;
+}
+
+/* ---------- gym: workout/template helpers ---------- */
+function volume(exercises){
+  return (exercises||[]).reduce(function(total, ex){
+    return total + (ex.sets||[]).reduce(function(sum, s){ return sum + (Number(s.reps)||0) * (Number(s.weight)||0); }, 0);
+  }, 0);
+}
+function bestSet(workouts, exerciseId){
+  var best = null;
+  (workouts||[]).forEach(function(w){
+    (w.exercises||[]).forEach(function(ex){
+      if(ex.exerciseId !== exerciseId) return;
+      (ex.sets||[]).forEach(function(set){
+        if(!best || Number(set.weight) > Number(best.weight)) best = set;
+      });
+    });
+  });
+  return best;
+}
+function lastPerformance(workouts, exerciseId){
+  for(var i=0;i<(workouts||[]).length;i++){
+    var w = workouts[i];
+    var found = (w.exercises||[]).find(function(e){ return e.exerciseId===exerciseId; });
+    if(found && found.sets && found.sets.length) return {date: w.date, sets: found.sets};
+  }
+  return null;
+}
+function formatWorkoutDate(iso){
+  var d = new Date(iso);
+  if(isNaN(d.getTime())) return iso;
+  return d.toLocaleDateString(undefined,{day:'2-digit', month:'short', year:'numeric'});
+}
+
+/* ---------- gym: ephemeral (per-viewer, never persisted) UI state ---------- */
+var gymView = 'home';
+var gymSearch = '';
+var gymGroupFilter = 'All';
+var gymBuilderOpen = false;
+var gymBuilder = {name:'', rows:[]};
+var gymEditingTemplateId = null;
+var activeWorkout = null;
+var restTimers = {};
+var gymGreetedPlayed = false;
+
+function withFocusPreserved(fn){
+  var active = document.activeElement;
+  var id = active && active.id;
+  var start = (active && typeof active.selectionStart==='number') ? active.selectionStart : null;
+  var end = (active && typeof active.selectionEnd==='number') ? active.selectionEnd : null;
+  fn();
+  if(id){
+    var el = document.getElementById(id);
+    if(el){
+      el.focus();
+      if(start!=null && el.setSelectionRange){ try{ el.setSelectionRange(start,end); }catch(e){} }
+    }
+  }
+}
+
+function playGymGreeting(){
+  if(gymGreetedPlayed) return;
+  try{
+    if(sessionStorage.getItem('gymGreeted')){ gymGreetedPlayed = true; return; }
+  }catch(e){}
+  gymGreetedPlayed = true;
+  if(!('speechSynthesis' in window)) return;
+  var speak = function(){
+    try{
+      var u = new SpeechSynthesisUtterance('Hello, Sir Yahya.');
+      u.rate = 0.82; u.pitch = 0.35; u.volume = 1;
+      var voices = window.speechSynthesis.getVoices();
+      var deep = voices.find(function(v){ return /male|david|mark|daniel|george|fred/i.test(v.name); });
+      if(deep) u.voice = deep;
+      window.speechSynthesis.speak(u);
+      try{ sessionStorage.setItem('gymGreeted','1'); }catch(e){}
+    }catch(e){}
+  };
+  try{
+    window.speechSynthesis.speak(new SpeechSynthesisUtterance(''));
+    speak();
+  }catch(e){
+    var onTap = function(){ speak(); window.removeEventListener('pointerdown', onTap); };
+    window.addEventListener('pointerdown', onTap, {once:true});
+  }
+}
+
+/* ---------- rendering ---------- */
+
+var TABS = [
+  {id:'overview', label:'Overview', icon:'🏠'},
+  {id:'tasks', label:'Tasks', icon:'✅'},
+  {id:'calendar', label:'Calendar', icon:'📅'},
+  {id:'jobs', label:'Jobs', icon:'💼'},
+  {id:'university', label:'University', icon:'🎓'},
+  {id:'gym', label:'Gym', icon:'🏋️'},
+  {id:'emails', label:'Emails', icon:'📧'},
+  {id:'files', label:'Files', icon:'📁'},
+  {id:'notes', label:'Notes', icon:'📝'}
+];
+
+function render(){
+  var openTasks = state.tasks.filter(function(t){return !t.done;}).length;
+  var upcoming = state.calendar.filter(function(c){ var d = daysUntil(c.date); return d!==null && d>=0 && d<=21; }).length;
+  var activeJobs = state.jobs.filter(function(j){ return j.status==='applied' || j.status==='interview'; }).length;
+  var unread = (state.emails && state.emails.unreadCount) || 0;
+
+  var navHtml = TABS.map(function(t){
+    return '<button class="navtab' + (activeTab===t.id?' active':'') + '" data-action="goTab" data-tab="' + t.id + '"><span class="ic">' + t.icon + '</span><span class="lbl">' + esc(t.label) + '</span></button>';
+  }).join('');
+
+  var body;
+  if(activeTab==='tasks') body = renderTasks();
+  else if(activeTab==='calendar') body = renderCalendar();
+  else if(activeTab==='jobs') body = renderJobs();
+  else if(activeTab==='university') body = renderUniversity();
+  else if(activeTab==='gym') body = renderGym();
+  else if(activeTab==='emails') body = renderEmails();
+  else if(activeTab==='files') body = renderFiles();
+  else if(activeTab==='notes') body = renderNotes();
+  else body = renderOverview();
+
+  var html = ''
+    + (STANDALONE ? (
+      '<div class="demobar">'
+      + '<span><strong>Demo mode</strong> — sample data, no account needed. Everything you click actually works and saves in this browser only.</span>'
+      + '<button type="button" class="demoreset" data-action="resetDemo">Reset demo data</button>'
+      + '</div>'
+    ) : '')
+    + '<div class="header">'
+    +   '<div class="greet"><h1>Hey Yahya 👋</h1><div class="sub">' + esc(new Date().toLocaleDateString(undefined,{weekday:'long', year:'numeric', month:'long', day:'numeric'})) + '</div></div>'
+    +   '<div class="savebar"><span class="dot ' + saveDotClass() + '" id="save-dot"></span><span id="save-label">' + saveLabel() + '</span></div>'
+    + '</div>'
+    + '<div class="stats">'
+    +   stat(openTasks, 'open tasks', 'tasks')
+    +   stat(upcoming, 'events in 3 weeks', 'calendar')
+    +   stat(activeJobs, 'applications active', 'jobs')
+    +   stat(unread, 'unread emails', 'emails')
+    + '</div>'
+    + '<nav class="tabbar">' + navHtml + '</nav>'
+    + '<div class="page">' + body + '</div>'
+    + '<div class="footer-note">Everything here (tasks, calendar, applications, gym, notes) is editable and saves for you automatically — ask me anytime to refresh the email snapshot or research more job leads.</div>';
+
+  root.innerHTML = html;
+  var notesArea = document.getElementById('notes-area');
+  if(notesArea){ notesArea.value = state.notes; }
+  if(gymEditingTemplateId){
+    var renameEl = root.querySelector('[data-action="gymRenameInput"]');
+    if(renameEl){ renameEl.focus(); renameEl.select(); }
+  }
+}
+
+function stat(n, label, tab){
+  return '<div class="stat" data-action="goTab" data-tab="' + tab + '"><div class="n">' + n + '</div><div class="l">' + esc(label) + '</div></div>';
+}
+
+function renderOverview(){
+  var openTasks = state.tasks.filter(function(t){return !t.done;});
+  var nextEvents = state.calendar.slice().sort(function(a,b){return (a.date||'').localeCompare(b.date||'');}).filter(function(c){var d=daysUntil(c.date); return d===null||d>=0;}).slice(0,3);
+  var topJobs = state.jobs.slice(0,3);
+  var g = state.gym || {};
+  var e = state.emails || {items:[]};
+  var filesCount = (state.files||[]).length;
+
+  function tile(tab, icon, title, previewHtml){
+    return '<button class="tile" data-action="goTab" data-tab="' + tab + '"><h3><span class="ic">' + icon + '</span>' + esc(title) + '</h3><div class="preview">' + previewHtml + '</div><div class="more">View ' + esc(title) + ' →</div></button>';
+  }
+
+  var tasksPreview = openTasks.length ? openTasks.slice(0,3).map(function(t){return esc(t.text);}).join('<br>') : 'All caught up.';
+  var calPreview = nextEvents.length ? nextEvents.map(function(c){return esc(c.title) + ' — ' + esc(fmtDate(c.date));}).join('<br>') : 'Nothing scheduled.';
+  var jobsPreview = topJobs.length ? topJobs.map(function(j){return esc(j.company) + ' — ' + esc(j.role||'');}).join('<br>') : 'No leads yet.';
+  var uniPreview = esc((state.university && state.university.program) || '') + '<br>' + esc((state.university && state.university.school) || '');
+  var gymPreview = (g.templates && g.templates.length) ? (g.templates.length + ' template(s), ' + (g.workouts?g.workouts.length:0) + ' workout(s) logged') : 'No templates yet — build one.';
+  var emailPreview = (e.items && e.items.length) ? ((e.unreadCount||0) + ' unread — latest: ' + esc(e.items[0].subject)) : 'No recent mail.';
+  var filesPreview = filesCount ? (filesCount + ' documents on file') : 'No files yet.';
+  var notesPreview = state.notes ? (esc(state.notes.slice(0,80)) + (state.notes.length>80?'…':'')) : 'Nothing jotted down.';
+
+  return '<div class="grid">'
+    + tile('tasks','✅','Tasks', tasksPreview)
+    + tile('calendar','📅','Calendar', calPreview)
+    + tile('jobs','💼','Jobs', jobsPreview)
+    + tile('university','🎓','University', uniPreview)
+    + tile('gym','🏋️','Gym', gymPreview)
+    + tile('emails','📧','Emails', emailPreview)
+    + tile('files','📁','Files', filesPreview)
+    + tile('notes','📝','Notes', notesPreview)
+    + '</div>';
+}
+
+function renderTasks(){
+  var catLabel = {uni:'Uni', job:'Job', gym:'Gym', general:'General'};
+  var items = state.tasks.map(function(t){
+    var dueBit = t.due ? '<span class="due">' + esc(fmtDate(t.due)) + '</span>' : '';
+    return '<li class="taskline' + (t.done?' done':'') + '">'
+      + '<input type="checkbox" data-action="toggleTask" data-id="' + t.id + '" ' + (t.done?'checked':'') + '>'
+      + '<span class="grow"><span class="txt">' + esc(t.text) + '</span> <span class="tag">' + esc(catLabel[t.category]||t.category) + '</span> ' + dueBit + '</span>'
+      + '<button class="iconbtn" data-action="delTask" data-id="' + t.id + '" title="Delete">✕</button>'
+      + '</li>';
+  }).join('');
+  return '<div class="card">'
+    + '<h2><span class="ic">✅</span>Tasks</h2>'
+    + '<ul class="plain">' + (items || '<div class="empty">No tasks yet.</div>') + '</ul>'
+    + '<form class="addrow" data-action="addTask">'
+    +   '<input type="text" name="text" placeholder="Add a task…" required>'
+    +   '<select name="category" class="catsel"><option value="general">General</option><option value="uni">Uni</option><option value="job">Job</option><option value="gym">Gym</option></select>'
+    +   '<input type="date" name="due">'
+    +   '<button class="btn" type="submit">Add</button>'
+    + '</form>'
+    + '</div>';
+}
+
+function renderCalendar(){
+  var sorted = state.calendar.slice().sort(function(a,b){ return (a.date||'').localeCompare(b.date||''); });
+  var items = sorted.map(function(c){
+    var d = daysUntil(c.date);
+    var rel = d===null ? '' : (d<0 ? esc(Math.abs(d))+'d ago' : d===0 ? 'today' : 'in '+d+'d');
+    return '<li class="taskline">'
+      + '<span class="grow"><span class="txt">' + esc(c.title) + '</span><br><span class="faint">' + esc(fmtDate(c.date)) + (rel?' · '+rel:'') + (c.notes?' · '+esc(c.notes):'') + '</span></span>'
+      + '<button class="iconbtn" data-action="delEvent" data-id="' + c.id + '" title="Delete">✕</button>'
+      + '</li>';
+  }).join('');
+  return '<div class="card">'
+    + '<h2><span class="ic">📅</span>Calendar</h2>'
+    + '<ul class="plain">' + (items || '<div class="empty">No events yet.</div>') + '</ul>'
+    + '<form class="addrow" data-action="addEvent">'
+    +   '<input type="date" name="date" required>'
+    +   '<input type="text" name="title" placeholder="Event / deadline…" required>'
+    +   '<button class="btn" type="submit">Add</button>'
+    + '</form>'
+    + '</div>';
+}
+
+function renderJobs(){
+  var statusLabel = {lead:'Lead', applied:'Applied', interview:'Interview', offer:'Offer', rejected:'Rejected'};
+  var rows = state.jobs.map(function(j){
+    var opts = ['lead','applied','interview','offer','rejected'].map(function(s){
+      return '<option value="'+s+'"'+(j.status===s?' selected':'')+'>'+statusLabel[s]+'</option>';
+    }).join('');
+    return '<tr>'
+      + '<td>' + esc(j.company) + '</td>'
+      + '<td>' + (j.link ? '<a href="'+esc(j.link)+'" target="_blank" rel="noopener">'+esc(j.role)+'</a>' : esc(j.role)) + '</td>'
+      + '<td>' + esc(j.location) + '</td>'
+      + '<td><select class="jobstatus" data-action="jobStatus" data-id="' + j.id + '">' + opts + '</select></td>'
+      + '<td class="faint">' + esc(j.notes||'') + '</td>'
+      + '<td><button class="iconbtn" data-action="delJob" data-id="' + j.id + '" title="Delete">✕</button></td>'
+      + '</tr>';
+  }).join('');
+  return '<div class="card wide">'
+    + '<h2><span class="ic">💼</span>AI Job Applications — Munich &amp; Remote</h2>'
+    + '<div class="tablewrap"><table><thead><tr><th>Company</th><th>Role</th><th>Where</th><th>Status</th><th>Notes</th><th></th></tr></thead><tbody>'
+    + (rows || '<tr><td colspan="6" class="empty">No leads yet.</td></tr>')
+    + '</tbody></table></div>'
+    + '<form class="addrow" data-action="addJob">'
+    +   '<input type="text" name="company" placeholder="Company" required>'
+    +   '<input type="text" name="role" placeholder="Role">'
+    +   '<input type="text" name="location" placeholder="Location" value="Munich">'
+    +   '<input type="url" name="link" placeholder="Link (optional)">'
+    +   '<button class="btn" type="submit">Add lead</button>'
+    + '</form>'
+    + '<div class="faint" style="margin-top:8px;">Leads pulled from job boards and company pages on Aug 30, 2026 — postings move fast, so double-check a listing is still open before applying. Ask me anytime to search for fresh ones.</div>'
+    + '</div>';
+}
+
+function renderUniversity(){
+  var u = state.university || {};
+  return '<div class="card">'
+    + '<h2><span class="ic">🎓</span>University</h2>'
+    + '<div class="taskline"><span class="grow">'
+    +   '<span class="txt">' + esc(u.program||'') + '</span><br>'
+    +   '<span class="faint">' + esc(u.school||'') + ' · starts ' + esc(u.starts||'') + '</span>'
+    + '</span></div>'
+    + '<div class="muted" style="margin-top:8px;">Course schedule and specific deadlines will land here once the timetable is published — add them as Calendar events or Tasks as they come in.</div>'
+    + '</div>'
+    + '<div class="card wide" style="margin-top:14px;">'
+    +   '<h2><span class="ic">🔗</span>Embed any tool</h2>'
+    +   '<div class="muted">This section can embed any external web app via an iframe — in my own copy I use it for a personal study-planner tool. Swap in your own <code>&lt;iframe src="..."&gt;</code> here and it just works.</div>'
+    + '</div>';
+}
+
+function renderGym(){
+  playGymGreeting();
+  var body;
+  var showSubnav = gymView !== 'workout';
+  if(gymView==='exercises') body = renderGymExercises();
+  else if(gymView==='templates') body = renderGymTemplates();
+  else if(gymView==='workout') body = renderGymWorkout();
+  else if(gymView==='cardio') body = renderGymCardio();
+  else if(gymView==='progress') body = renderGymProgress();
+  else body = renderGymHome();
+
+  var subtabs = [
+    {id:'home', label:'🏠 Home'},
+    {id:'exercises', label:'💪 Exercises'},
+    {id:'templates', label:'📋 Templates'},
+    {id:'cardio', label:'🫀 Cardio'},
+    {id:'progress', label:'📈 Progress'}
+  ];
+  var nav = subtabs.map(function(t){
+    return '<button class="subtab' + (gymView===t.id?' active':'') + '" data-action="gymGoto" data-view="' + t.id + '">' + esc(t.label) + '</button>';
+  }).join('');
+
+  return (showSubnav ? '<div class="subtabbar">' + nav + '</div>' : '') + body;
+}
+
+function renderGymHome(){
+  var g = state.gym;
+  var lastSessions = g.workouts.slice(0,4);
+  var recentTpl = g.templates[0];
+  return '<div class="grid">'
+    + '<div class="card wide gymhero">'
+    +   '<div class="eyebrow">Welcome back</div>'
+    +   '<h2>Hello, Sir Yahya.</h2>'
+    +   '<p>The gym is your training ground. Pick a template, put in the work, and let every rep be recorded.</p>'
+    +   (recentTpl
+          ? '<button class="btn" data-action="startWorkout" data-id="' + recentTpl.id + '">Start a workout</button>'
+          : '<button class="btn" data-action="gymGoto" data-view="templates">Create your first template</button>')
+    + '</div>'
+    + stattile(EXERCISES.length, 'Exercises', 'exercises')
+    + stattile(g.templates.length, 'Templates', 'templates')
+    + stattile(g.workouts.length, 'Workouts logged', 'progress')
+    + stattile(g.cardio.length, 'Cardio sessions', 'cardio')
+    + '</div>'
+    + (lastSessions.length
+        ? ('<div class="card wide" style="margin-top:16px;"><h2><span class="ic">🕒</span>Last sessions</h2><ul class="plain">'
+           + lastSessions.map(function(w){
+              return '<li class="taskline"><span class="grow"><span class="txt">' + esc(w.templateName) + '</span><br><span class="faint">' + esc(formatWorkoutDate(w.date)) + '</span></span>'
+                + '<span class="tag" style="background:var(--success-bg); color:var(--success);">' + volume(w.exercises).toLocaleString() + ' kg</span></li>';
+           }).join('') + '</ul></div>')
+        : '');
+}
+
+function stattile(n, label, view){
+  return '<div class="stat" data-action="gymGoto" data-view="' + view + '"><div class="n">' + n + '</div><div class="l">' + esc(label) + '</div></div>';
+}
+
+function renderGymExercises(){
+  var q = (gymSearch||'').toLowerCase();
+  var grp = gymGroupFilter || 'All';
+  var filtered = EXERCISES.filter(function(e){
+    return (grp==='All' || e.group===grp) && e.name.toLowerCase().indexOf(q) >= 0;
+  });
+  var chips = ['All'].concat(MUSCLE_GROUPS).map(function(g){
+    return '<button class="navtab' + (grp===g?' active':'') + '" data-action="gymFilterGroup" data-group="' + esc(g) + '">' + esc(g) + '</button>';
+  }).join('');
+  var cards = filtered.map(function(e){
+    var pr = bestSet(state.gym.workouts, e.id);
+    return '<div class="card">'
+      + '<div class="row" style="justify-content:space-between;"><h3 style="font-size:14px;margin:0;">' + esc(e.name) + '</h3><span class="tag">' + esc(e.group) + '</span></div>'
+      + '<div class="faint" style="margin-top:6px;">' + esc(e.equipment) + ' · Rest ' + formatRest(e.defaultRest) + '</div>'
+      + (pr ? '<div class="pr-pill">PR: ' + pr.weight + ' kg × ' + pr.reps + '</div>' : '')
+      + '</div>';
+  }).join('');
+  return '<div class="card wide">'
+    + '<h2><span class="ic">💪</span>Exercises</h2>'
+    + '<div class="muted" style="margin-bottom:10px;">' + EXERCISES.length + ' of the most performed gym movements in the world.</div>'
+    + '<input type="text" id="gym-search-input" placeholder="Search exercise…" value="' + esc(gymSearch) + '" data-action="gymSearch" style="width:100%; margin-bottom:10px;">'
+    + '<div class="tabbar" style="margin-bottom:6px;">' + chips + '</div>'
+    + '</div>'
+    + '<div class="grid">' + (cards || '<div class="empty">No exercise matches that search.</div>') + '</div>';
+}
+
+function renderGymTemplates(){
+  var g = state.gym;
+  var builderHtml = '';
+  if(gymBuilderOpen){
+    var groupOptions = MUSCLE_GROUPS.map(function(grp){
+      var opts = EXERCISES.filter(function(e){ return e.group===grp; }).map(function(e){
+        return '<option value="' + e.id + '">' + esc(e.name) + '</option>';
+      }).join('');
+      return '<optgroup label="' + esc(grp) + '">' + opts + '</optgroup>';
+    }).join('');
+    var rows = gymBuilder.rows.map(function(row, i){
+      var ex = getExercise(row.exerciseId);
+      return '<div class="gym-row">'
+        + '<div class="row" style="justify-content:space-between;">'
+        +   '<strong style="font-size:13px;">' + esc(ex?ex.name:row.exerciseId) + '</strong>'
+        +   '<span>'
+        +     (i>0 ? '<button class="iconbtn" data-action="gymRowMove" data-dir="-1" data-idx="'+i+'" title="Move up">↑</button>' : '')
+        +     (i<gymBuilder.rows.length-1 ? '<button class="iconbtn" data-action="gymRowMove" data-dir="1" data-idx="'+i+'" title="Move down">↓</button>' : '')
+        +     '<button class="iconbtn" data-action="gymRowRemove" data-idx="'+i+'" title="Remove">✕</button>'
+        +   '</span>'
+        + '</div>'
+        + '<div class="row" style="gap:8px; margin-top:6px;">'
+        +   '<label>Sets<input type="number" min="1" value="' + row.sets + '" data-action="gymRowField" data-idx="'+i+'" data-field="sets"></label>'
+        +   '<label>Reps<input type="number" min="1" value="' + row.reps + '" data-action="gymRowField" data-idx="'+i+'" data-field="reps"></label>'
+        +   '<label>Rest (s)<input type="number" min="0" step="15" value="' + row.restSeconds + '" data-action="gymRowField" data-idx="'+i+'" data-field="restSeconds"></label>'
+        + '</div>'
+        + '</div>';
+    }).join('');
+    builderHtml = '<div class="card wide" style="border-color:var(--accent); margin-top:14px;">'
+      + '<h2 style="margin-bottom:10px;">New template</h2>'
+      + '<input type="text" id="gym-template-name" placeholder="Pull Day" value="' + esc(gymBuilder.name) + '" data-action="gymBuilderName" style="width:100%; margin-bottom:10px;">'
+      + '<select data-action="gymAddRow" style="width:100%; margin-bottom:12px;"><option value="">+ Add exercise…</option>' + groupOptions + '</select>'
+      + (rows || '<div class="empty">No exercises yet — pick one above.</div>')
+      + '<div class="row" style="margin-top:12px; gap:8px;">'
+      +   '<button class="btn" data-action="gymSaveTemplate">Save template</button>'
+      +   '<button class="btn ghost" data-action="gymCancelBuilder">Cancel</button>'
+      + '</div>'
+      + '</div>';
+  }
+
+  var list = g.templates.map(function(t){
+    var isEditing = gymEditingTemplateId === t.id;
+    var titleHtml = isEditing
+      ? '<input type="text" class="renamebox" value="' + esc(t.name) + '" data-action="gymRenameInput" data-id="' + t.id + '" autofocus>'
+      : '<h3 style="margin:0; font-size:15px; cursor:pointer;" data-action="gymRenameStart" data-id="' + t.id + '" title="Click to rename">' + esc(t.name) + ' ✎</h3>';
+    var exList = t.exercises.map(function(row){
+      var ex = getExercise(row.exerciseId);
+      return '<div class="faint">' + esc(ex?ex.name:row.exerciseId) + ' — ' + row.sets + '×' + row.reps + ', rest ' + formatRest(row.restSeconds) + '</div>';
+    }).join('');
+    return '<div class="card">'
+      + '<div class="row" style="justify-content:space-between; align-items:flex-start;">'
+      +   titleHtml
+      +   '<button class="iconbtn" data-action="gymDeleteTemplate" data-id="' + t.id + '" title="Delete">✕</button>'
+      + '</div>'
+      + exList
+      + '<div class="row" style="margin-top:10px; gap:8px;">'
+      +   '<button class="btn" data-action="startWorkout" data-id="' + t.id + '">▶ Start</button>'
+      +   '<button class="btn ghost" data-action="gymDuplicateTemplate" data-id="' + t.id + '">Duplicate</button>'
+      + '</div>'
+      + '</div>';
+  }).join('');
+
+  return '<div class="card wide">'
+    + '<div class="row" style="justify-content:space-between;">'
+    +   '<h2><span class="ic">📋</span>Templates</h2>'
+    +   (gymBuilderOpen ? '' : '<button class="btn" data-action="gymOpenBuilder">+ Create template</button>')
+    + '</div>'
+    + '<div class="muted">Your personal workout plans — create as many as you want.</div>'
+    + '</div>'
+    + builderHtml
+    + '<div class="grid" style="margin-top:14px;">' + (list || '<div class="empty">No templates yet.</div>') + '</div>';
+}
+
+function renderGymWorkout(){
+  if(!activeWorkout){
+    return '<div class="card wide"><div class="empty">No workout in progress.</div><button class="btn" style="margin-top:10px;" data-action="gymGoto" data-view="templates">Back to templates</button></div>';
+  }
+  var w = activeWorkout;
+  var totalVol = volume(w.exercises);
+  var sections = w.exercises.map(function(ex, exIndex){
+    var exercise = getExercise(ex.exerciseId);
+    var previous = lastPerformance(state.gym.workouts, ex.exerciseId);
+    var restSec = ex.restSeconds || (exercise?exercise.defaultRest:60);
+    var timer = restTimers[exIndex];
+    var timerHtml;
+    if(timer && timer.running){
+      timerHtml = '<span class="resttimer">⏱ <span id="rest-remaining-' + exIndex + '">' + formatCountdown(timer.remaining) + '</span> <button class="iconbtn" data-action="gymStopRest" data-idx="' + exIndex + '" title="Stop">✕</button></span>';
+    } else {
+      timerHtml = '<button class="btn ghost" data-action="gymStartRest" data-idx="' + exIndex + '" data-seconds="' + restSec + '">⏱ Start rest (' + formatRest(restSec) + ')</button>';
+    }
+    var setsHtml = ex.sets.map(function(set, setIndex){
+      return '<div class="setgrid">'
+        + '<div class="idx">' + (setIndex+1) + '</div>'
+        + '<label>Reps<input type="number" min="0" value="' + set.reps + '" data-action="gymSetField" data-ex="' + exIndex + '" data-set="' + setIndex + '" data-field="reps"></label>'
+        + '<label>Weight (kg)<input type="number" min="0" step="2.5" value="' + set.weight + '" data-action="gymSetField" data-ex="' + exIndex + '" data-set="' + setIndex + '" data-field="weight"></label>'
+        + '</div>';
+    }).join('');
+    return '<div class="card wide">'
+      + '<div class="row" style="justify-content:space-between; flex-wrap:wrap;">'
+      +   '<h3 style="margin:0; font-size:16px;">' + esc(exercise?exercise.name:ex.exerciseId) + '</h3>'
+      +   timerHtml
+      + '</div>'
+      + (previous ? '<div class="faint" style="margin:6px 0 10px;">Last time (' + esc(formatWorkoutDate(previous.date)) + '): ' + previous.sets.map(function(s){ return s.weight+'kg×'+s.reps; }).join(', ') + '</div>' : '')
+      + setsHtml
+      + '<button class="btn ghost" data-action="gymAddSet" data-ex="' + exIndex + '">+ Add set</button>'
+      + '</div>';
+  }).join('');
+  return '<button class="btn ghost" style="margin-bottom:12px;" data-action="gymGoto" data-view="templates">← Back to templates</button>'
+    + '<div class="card wide">'
+    +   '<div class="faint" style="text-transform:uppercase; letter-spacing:.1em; font-size:10.5px; color:var(--accent);">Workout in progress</div>'
+    +   '<h2 style="margin:4px 0;">' + esc(w.templateName) + '</h2>'
+    +   '<div class="muted">Volume so far: ' + totalVol.toLocaleString() + ' kg</div>'
+    + '</div>'
+    + sections
+    + '<button class="btn" style="width:100%;" data-action="gymFinishWorkout">✔ Finish &amp; save workout</button>';
+}
+
+function renderGymCardio(){
+  var g = state.gym;
+  var totalMin = g.cardio.reduce(function(s,c){ return s + (Number(c.minutes)||0); }, 0);
+  var rows = g.cardio.map(function(c){
+    return '<li class="taskline"><span class="grow"><span class="txt">' + esc(c.name) + '</span><br><span class="faint">' + esc(formatWorkoutDate(c.date)) + '</span></span>'
+      + '<span class="tag">' + c.minutes + ' min</span>'
+      + '<button class="iconbtn" data-action="gymDeleteCardio" data-id="' + c.id + '" title="Delete">✕</button></li>';
+  }).join('');
+  return '<div class="card wide">'
+    + '<h2><span class="ic">🫀</span>Cardio</h2>'
+    + '<div class="muted" style="margin-bottom:12px;">' + g.cardio.length + ' sessions · ' + totalMin + ' minutes total</div>'
+    + '<form class="addrow" data-action="addCardio">'
+    +   '<input type="text" name="name" placeholder="Treadmill, jump rope, stairmaster…" required>'
+    +   '<input type="text" name="minutes" placeholder="Minutes" style="max-width:100px;" required>'
+    +   '<button class="btn" type="submit">Save session</button>'
+    + '</form>'
+    + '<ul class="plain" style="margin-top:14px;">' + (rows || '<div class="empty">No cardio logged yet.</div>') + '</ul>'
+    + '</div>';
+}
+
+function renderGymProgress(){
+  var g = state.gym;
+  var trackedIds = [];
+  g.workouts.forEach(function(w){ (w.exercises||[]).forEach(function(ex){ if(trackedIds.indexOf(ex.exerciseId)<0) trackedIds.push(ex.exerciseId); }); });
+  var prCards = trackedIds.map(function(id){
+    var pr = bestSet(g.workouts, id);
+    if(!pr) return '';
+    var ex = getExercise(id);
+    return '<div class="card"><div class="row" style="justify-content:space-between;"><span>' + esc(ex?ex.name:id) + '</span><span class="pr-pill">' + pr.weight + ' kg × ' + pr.reps + '</span></div></div>';
+  }).join('');
+  var history = g.workouts.map(function(w){
+    var exLines = (w.exercises||[]).map(function(ex){
+      var exercise = getExercise(ex.exerciseId);
+      return '<div class="row" style="justify-content:space-between;"><span>' + esc(exercise?exercise.name:ex.exerciseId) + '</span><span class="faint">' + ex.sets.map(function(s){return s.weight+'kg×'+s.reps;}).join(', ') + '</span></div>';
+    }).join('');
+    return '<div class="card wide">'
+      + '<div class="row" style="justify-content:space-between;">'
+      +   '<div><h3 style="margin:0; font-size:15px;">' + esc(w.templateName) + '</h3><span class="faint">' + esc(formatWorkoutDate(w.date)) + '</span></div>'
+      +   '<div class="row"><span class="tag" style="background:var(--success-bg); color:var(--success);">' + volume(w.exercises).toLocaleString() + ' kg</span><button class="iconbtn" data-action="gymDeleteWorkout" data-id="' + w.id + '" title="Delete">✕</button></div>'
+      + '</div>'
+      + exLines
+      + '</div>';
+  }).join('');
+  var cardioHist = g.cardio.map(function(c){
+    return '<li class="taskline"><span class="grow"><span class="txt">' + esc(c.name) + '</span><br><span class="faint">' + esc(formatWorkoutDate(c.date)) + '</span></span><span class="tag">' + c.minutes + ' min</span></li>';
+  }).join('');
+
+  return '<div class="card wide"><h2><span class="ic">📈</span>Progress</h2><div class="muted">Everything you train is saved here — beat these numbers next session.</div></div>'
+    + (prCards ? '<div class="card wide" style="margin-top:12px;"><h3 style="margin-bottom:8px;">Personal records</h3><div class="grid">' + prCards + '</div></div>' : '')
+    + '<div style="margin-top:12px;">' + (history || '<div class="card wide"><div class="empty">No workouts saved yet. Start a template to log your first session.</div></div>') + '</div>'
+    + (cardioHist ? '<div class="card wide" style="margin-top:12px;"><h3 style="margin-bottom:8px;">Cardio history</h3><ul class="plain">' + cardioHist + '</ul></div>' : '');
+}
+
+function startWorkout(templateId){
+  var t = state.gym.templates.find(function(x){ return x.id===templateId; });
+  if(!t) return;
+  activeWorkout = {
+    templateId: t.id,
+    templateName: t.name,
+    exercises: t.exercises.map(function(row){
+      var prev = lastPerformance(state.gym.workouts, row.exerciseId);
+      var sets = [];
+      for(var i=0;i<row.sets;i++){
+        sets.push({
+          reps: (prev && prev.sets[i]) ? prev.sets[i].reps : row.reps,
+          weight: (prev && prev.sets[i]) ? prev.sets[i].weight : 0
+        });
+      }
+      return {exerciseId: row.exerciseId, sets: sets, restSeconds: row.restSeconds};
+    })
+  };
+  Object.keys(restTimers).forEach(function(k){ if(restTimers[k].intervalId) clearInterval(restTimers[k].intervalId); });
+  restTimers = {};
+  gymView = 'workout';
+  render();
+}
+
+function renderEmails(){
+  var e = state.emails || {items:[]};
+  var rows = (e.items||[]).map(function(m){
+    return '<div class="emailrow"><div class="who">' + esc(m.sender) + '</div><div class="what">' + esc(m.subject) + '</div><div class="when">' + esc(m.date) + '</div></div>';
+  }).join('');
+  return '<div class="card">'
+    + '<h2><span class="ic">📧</span>Emails</h2>'
+    + '<div class="muted" style="margin-bottom:6px;">' + (e.unreadCount||0) + ' unread · snapshot from ' + esc(fmtWhen(e.fetchedAt)) + '</div>'
+    + (rows || '<div class="empty">No recent mail.</div>')
+    + '<div class="faint" style="margin-top:8px;">Mostly newsletters/promos right now — nothing job- or uni-related in the latest batch. Ask me to refresh this anytime.</div>'
+    + '</div>';
+}
+
+function fmtWhen(iso){
+  if(!iso) return '';
+  var d = new Date(iso);
+  if(isNaN(d.getTime())) return iso;
+  return d.toLocaleString(undefined,{month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'});
+}
+
+function renderFiles(){
+  var byCat = {};
+  (state.files||[]).forEach(function(f){
+    var c = f.category || 'Other';
+    (byCat[c] = byCat[c]||[]).push(f);
+  });
+  var blocks = Object.keys(byCat).map(function(cat){
+    var chips = byCat[cat].map(function(f){ return '<span class="filechip">📄 ' + esc(f.name) + '</span>'; }).join('');
+    return '<div class="filecat"><div class="lbl">' + esc(cat) + '</div>' + chips + '</div>';
+  }).join('');
+  return '<div class="card">'
+    + '<h2><span class="ic">📁</span>Files</h2>'
+    + '<div class="filecats">' + (blocks || '<div class="empty">No folder connected yet.</div>') + '</div>'
+    + '<div class="faint" style="margin-top:8px;">From your Documents folder, snapshot Aug 30, 2026. Ask me to rescan anytime a file changes.</div>'
+    + '</div>';
+}
+
+function renderNotes(){
+  return '<div class="card wide">'
+    + '<h2><span class="ic">📝</span>Notes</h2>'
+    + '<textarea class="notesbox" id="notes-area" data-action="notes" placeholder="Anything on your mind…"></textarea>'
+    + '</div>';
+}
+
+/* ---------- save / publish ---------- */
+
+function saveDotClass(){
+  return apiState==='ok' ? 'ok' : (apiState==='busy' ? 'busy' : (apiState==='error' ? 'err' : ''));
+}
+function saveLabel(){
+  if(STANDALONE) return apiState==='ok' ? 'Saved in this browser (demo mode)' : 'Demo mode — changes save to this browser only';
+  if(apiState==='ok') return 'Saved to your dashboard';
+  if(apiState==='busy') return 'Saving…';
+  if(apiState==='error') return 'Save failed — will retry next edit';
+  if(apiState==='unavailable') return 'Changes stay in this view only (open in claude.ai to sync)';
+  return 'Connecting…';
+}
+function updateSaveUI(){
+  var dot = document.getElementById('save-dot'); var label = document.getElementById('save-label');
+  if(dot){ dot.className = 'dot ' + saveDotClass(); }
+  if(label){ label.textContent = saveLabel(); }
+}
+
+function buildFullDocument(s){
+  var json = JSON.stringify(s).replace(/</g, '\\u003c');
+  return '<!doctype html>\n<html>\n<head>\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width, initial-scale=1">\n<title>' + PAGE_TITLE + '</title>\n<style id="appstyle">' + STYLE_TEXT + '</style>\n</head>\n<body>\n<script type="application/json" id="state-data">' + json + '<' + '/script>\n<div id="root"></div>\n<script id="appscript">' + SCRIPT_TEXT + '<' + '/script>\n</body>\n</html>';
+}
+
+var saveTimer = null;
+function save(immediate){
+  if(saveTimer){ clearTimeout(saveTimer); saveTimer = null; }
+  var run = function(){
+    doSave();
+  };
+  if(immediate){ run(); } else { saveTimer = setTimeout(run, 900); }
+}
+
+function doSave(){
+  if(STANDALONE){
+    try{
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      apiState = 'ok';
+    }catch(e){
+      apiState = 'error';
+    }
+    updateSaveUI();
+    return;
+  }
+  if(!artifactApi){
+    apiState = 'unavailable'; updateSaveUI(); return;
+  }
+  apiState = 'busy'; updateSaveUI();
+  artifactApi.publish(buildFullDocument(state)).then(function(){
+    apiState = 'ok'; updateSaveUI();
+  }).catch(function(e){
+    if(e && e.code === 'conflict'){ /* view reloads automatically */ return; }
+    apiState = 'error'; updateSaveUI();
+  });
+}
+
+function resetDemoData(){
+  if(!STANDALONE) return;
+  var ok = window.confirm('Reset the demo back to its original sample data? This clears everything you\'ve added in this browser.');
+  if(!ok) return;
+  try{ localStorage.removeItem(STORAGE_KEY); }catch(e){}
+  location.reload();
+}
+
+/* ---------- event handling ---------- */
+
+root.addEventListener('click', function(e){
+  var el = e.target.closest('[data-action]');
+  if(!el) return;
+  var action = el.getAttribute('data-action');
+  var id = el.getAttribute('data-id');
+  if(action === 'resetDemo'){
+    resetDemoData();
+  } else if(action === 'goTab'){
+    activeTab = el.getAttribute('data-tab');
+    render();
+  } else if(action === 'toggleTask'){
+    var t = state.tasks.find(function(x){return x.id===id;});
+    if(t){ t.done = el.checked; render(); save(true); }
+  } else if(action === 'delTask'){
+    state.tasks = state.tasks.filter(function(x){return x.id!==id;});
+    render(); save(true);
+  } else if(action === 'delEvent'){
+    state.calendar = state.calendar.filter(function(x){return x.id!==id;});
+    render(); save(true);
+  } else if(action === 'delJob'){
+    state.jobs = state.jobs.filter(function(x){return x.id!==id;});
+    render(); save(true);
+  } else if(action === 'gymGoto'){
+    gymView = el.getAttribute('data-view');
+    render();
+  } else if(action === 'gymFilterGroup'){
+    gymGroupFilter = el.getAttribute('data-group');
+    render();
+  } else if(action === 'startWorkout'){
+    startWorkout(id);
+  } else if(action === 'gymOpenBuilder'){
+    gymBuilderOpen = true; gymBuilder = {name:'', rows:[]};
+    render();
+  } else if(action === 'gymCancelBuilder'){
+    gymBuilderOpen = false; gymBuilder = {name:'', rows:[]};
+    render();
+  } else if(action === 'gymSaveTemplate'){
+    var tname = (gymBuilder.name||'').trim();
+    if(!tname || gymBuilder.rows.length===0) return;
+    state.gym.templates.unshift({id: uid(), name: tname, createdAt: new Date().toISOString(), exercises: gymBuilder.rows.slice()});
+    gymBuilderOpen = false; gymBuilder = {name:'', rows:[]};
+    render(); save(true);
+  } else if(action === 'gymDeleteTemplate'){
+    state.gym.templates = state.gym.templates.filter(function(t){return t.id!==id;});
+    render(); save(true);
+  } else if(action === 'gymDuplicateTemplate'){
+    var orig = state.gym.templates.find(function(t){return t.id===id;});
+    if(orig){
+      state.gym.templates.unshift({id: uid(), name: orig.name + ' (copy)', createdAt: new Date().toISOString(), exercises: JSON.parse(JSON.stringify(orig.exercises))});
+      render(); save(true);
+    }
+  } else if(action === 'gymRenameStart'){
+    gymEditingTemplateId = id;
+    render();
+  } else if(action === 'gymRowRemove'){
+    var ridx = Number(el.getAttribute('data-idx'));
+    gymBuilder.rows.splice(ridx, 1);
+    render();
+  } else if(action === 'gymRowMove'){
+    var midx = Number(el.getAttribute('data-idx')), dir = Number(el.getAttribute('data-dir'));
+    var target = midx + dir;
+    if(target>=0 && target<gymBuilder.rows.length){
+      var tmp = gymBuilder.rows[midx];
+      gymBuilder.rows[midx] = gymBuilder.rows[target];
+      gymBuilder.rows[target] = tmp;
+      render();
+    }
+  } else if(action === 'gymAddSet'){
+    var aexIdx = Number(el.getAttribute('data-ex'));
+    var exObj = activeWorkout.exercises[aexIdx];
+    var lastSet = exObj.sets[exObj.sets.length-1] || {reps:10, weight:0};
+    exObj.sets.push({reps: lastSet.reps, weight: lastSet.weight});
+    render();
+  } else if(action === 'gymFinishWorkout'){
+    if(activeWorkout){
+      state.gym.workouts.unshift({
+        id: uid(), templateId: activeWorkout.templateId, templateName: activeWorkout.templateName,
+        date: new Date().toISOString(), exercises: activeWorkout.exercises
+      });
+      Object.keys(restTimers).forEach(function(k){ if(restTimers[k].intervalId) clearInterval(restTimers[k].intervalId); });
+      restTimers = {};
+      activeWorkout = null;
+      gymView = 'progress';
+      render(); save(true);
+    }
+  } else if(action === 'gymStartRest'){
+    var sidx = Number(el.getAttribute('data-idx')), secs = Number(el.getAttribute('data-seconds'));
+    if(restTimers[sidx] && restTimers[sidx].intervalId) clearInterval(restTimers[sidx].intervalId);
+    var timerObj = {remaining: secs, running: true, intervalId: null};
+    restTimers[sidx] = timerObj;
+    timerObj.intervalId = setInterval(function(){
+      timerObj.remaining -= 1;
+      var elx = document.getElementById('rest-remaining-' + sidx);
+      if(elx) elx.textContent = formatCountdown(timerObj.remaining);
+      if(timerObj.remaining <= 0){
+        timerObj.running = false;
+        clearInterval(timerObj.intervalId);
+        render();
+      }
+    }, 1000);
+    render();
+  } else if(action === 'gymStopRest'){
+    var stidx = Number(el.getAttribute('data-idx'));
+    if(restTimers[stidx] && restTimers[stidx].intervalId) clearInterval(restTimers[stidx].intervalId);
+    delete restTimers[stidx];
+    render();
+  } else if(action === 'gymDeleteCardio'){
+    state.gym.cardio = state.gym.cardio.filter(function(c){return c.id!==id;});
+    render(); save(true);
+  } else if(action === 'gymDeleteWorkout'){
+    state.gym.workouts = state.gym.workouts.filter(function(w){return w.id!==id;});
+    render(); save(true);
+  }
+});
+
+root.addEventListener('change', function(e){
+  var el = e.target;
+  var action = el.getAttribute && el.getAttribute('data-action');
+  if(action === 'toggleTask'){ return; } // handled in click for checkboxes in some browsers; safe no-op
+  if(action === 'jobStatus'){
+    var id = el.getAttribute('data-id');
+    var j = state.jobs.find(function(x){return x.id===id;});
+    if(j){ j.status = el.value; save(true); }
+  } else if(action === 'gymAddRow'){
+    if(!el.value) return;
+    var exc = getExercise(el.value);
+    if(!exc) return;
+    gymBuilder.rows.push({exerciseId: el.value, sets:3, reps:10, restSeconds: exc.defaultRest});
+    render();
+  } else if(action === 'gymRowField'){
+    var fidx = Number(el.getAttribute('data-idx')), field = el.getAttribute('data-field');
+    var fval = Number(el.value) || 0;
+    gymBuilder.rows[fidx][field] = fval;
+    render();
+  } else if(action === 'gymSetField'){
+    var gexIdx = Number(el.getAttribute('data-ex')), gsetIdx = Number(el.getAttribute('data-set')), gfield = el.getAttribute('data-field');
+    var gval = Number(el.value) || 0;
+    activeWorkout.exercises[gexIdx].sets[gsetIdx][gfield] = gval;
+    render();
+  } else if(action === 'gymRenameInput'){
+    var rid = el.getAttribute('data-id');
+    var rname = el.value.trim();
+    var tpl = state.gym.templates.find(function(t){return t.id===rid;});
+    if(tpl && rname){ tpl.name = rname; save(true); }
+    gymEditingTemplateId = null;
+    render();
+  }
+});
+
+root.addEventListener('input', function(e){
+  var el = e.target;
+  var action = el.getAttribute && el.getAttribute('data-action');
+  if(el.id === 'notes-area'){
+    state.notes = el.value;
+    save(false);
+  } else if(action === 'gymSearch'){
+    gymSearch = el.value;
+    withFocusPreserved(render);
+  } else if(action === 'gymBuilderName'){
+    gymBuilder.name = el.value;
+  }
+});
+
+root.addEventListener('keydown', function(e){
+  var action = e.target.getAttribute && e.target.getAttribute('data-action');
+  if(e.key === 'Enter' && (action === 'gymRenameInput' || action === 'gymBuilderName')){
+    e.preventDefault();
+    e.target.blur();
+  }
+});
+
+root.addEventListener('submit', function(e){
+  var form = e.target.closest('[data-action]');
+  if(!form) return;
+  e.preventDefault();
+  var action = form.getAttribute('data-action');
+  var fd = new FormData(form);
+  if(action === 'addTask'){
+    var text = (fd.get('text')||'').toString().trim();
+    if(!text) return;
+    state.tasks.push({id: uid(), text: text, category: fd.get('category')||'general', done:false, due: fd.get('due')||''});
+    render(); save(true);
+  } else if(action === 'addEvent'){
+    var title = (fd.get('title')||'').toString().trim();
+    var date = fd.get('date');
+    if(!title || !date) return;
+    state.calendar.push({id: uid(), date: date, title: title, notes:''});
+    render(); save(true);
+  } else if(action === 'addJob'){
+    var company = (fd.get('company')||'').toString().trim();
+    if(!company) return;
+    state.jobs.push({id: uid(), company: company, role: (fd.get('role')||'').toString(), location:(fd.get('location')||'').toString()||'Munich', status:'lead', link:(fd.get('link')||'').toString(), notes:''});
+    render(); save(true);
+  } else if(action === 'addCardio'){
+    var cname = (fd.get('name')||'').toString().trim();
+    var cmins = Number(fd.get('minutes'));
+    if(!cname || !cmins || cmins<=0) return;
+    state.gym.cardio.unshift({id: uid(), name: cname, minutes: cmins, date: new Date().toISOString()});
+    render(); save(true);
+  }
+});
+
+/* ---------- capability init ---------- */
+
+function initCapability(){
+  if(STANDALONE){ apiState = 'ok'; updateSaveUI(); return; }
+  if(!window.claude || !window.claude.use){ apiState = 'unavailable'; updateSaveUI(); return; }
+  window.claude.use('artifact').then(function(api){
+    artifactApi = api;
+    apiState = api ? 'ok' : 'unavailable';
+    updateSaveUI();
+  }).catch(function(){ apiState = 'unavailable'; updateSaveUI(); });
+}
+
+render();
+initCapability();
+})();
+</script>
+</body>
+</html>
