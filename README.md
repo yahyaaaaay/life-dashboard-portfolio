@@ -2,7 +2,7 @@
 
 A personal dashboard for tracking university, job applications, gym training, tasks, calendar, email and notes — as a single self-contained HTML file, with no framework, no build step, and no backend.
 
-**[Live demo →](#)** *(add your GitHub Pages URL here once enabled)*
+**[Live demo →](https://yahyaaaaay.github.io/life-dashboard-portfolio/)**
 
 ![Overview tab](screenshots/overview.png)
 
